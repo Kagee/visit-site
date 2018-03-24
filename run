@@ -1,9 +1,15 @@
 #! /bin/bash
+SECCOMP_PROFILE="chrome_docker_seccomp_profile.json"
+if [[ ! -f "$SECCOMP_PROFILE" ]]; then
+    wget https://raw.githubusercontent.com/jfrazelle/dotfiles/master/etc/docker/seccomp/chrome.json -O "$SECCOMP_PROFILE"
+fi
 
 docker run --rm -t -i \
-    -v $PWD/bin:/home/mitmproxy/bin \
-    -v $PWD/data/mitmproxy:/home/mitmproxy/.mitmproxy \
-    hild1.no:mitmphantom middag.hild1.no
+    -v $PWD/bin:/home/mitm/bin \
+    -v $PWD/data:/home/mitm/data \
+    --security-opt seccomp="$SECCOMP_PROFILE" \
+    hild1.no:mitmchrome /bin/bash
 
+#--security-opt seccomp="$SECCOMP_PROFILE" \
 # docker run --rm -it -v $PWD/mitmproxy:/home/mitmproxy/.mitmproxy 
 # -p 127.0.0.1:8081:8081 -p 8080:8080 mitmproxy/mitmproxy mitmweb --web-iface 0.0.0.0

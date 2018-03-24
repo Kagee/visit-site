@@ -12,36 +12,47 @@ RUN ln -sf /usr/share/zoneinfo/Europe/Oslo /etc/localtime
 RUN export DEBIAN_FRONTEND=teletype \
       && apt-get update -y \
       && apt-get upgrade -y \
-      && apt-get install -y libstdc++6 language-pack-en
+      && apt-get install -y language-pack-en
+
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
 RUN update-locale LANG=en_US.utf8
 
-# Perhaps make normal user? UID=1000, safe as default user
-RUN addgroup --system mitmproxy \
-    && adduser --system --ingroup mitmproxy mitmproxy
+ARG USER_NAME=mitm
+ARG USER_ID=1000
 
+# Add a non-root user to run browser as
+RUN useradd \
+      --system \
+      --uid $USER_ID \
+      --user-group \
+      --groups audio,video \
+      --create-home \
+      $USER_NAME
+
+# tcpdump and some useful tools
 RUN export DEBIAN_FRONTEND=teletype \
     && apt-get install -y --no-install-recommends \
-    tcpdump curl bzip2 wget ca-certificates libfontconfig
-# Perhaps setup tcpdump so it can be run bu normal user?
-# https://askubuntu.com/a/632189
+    tcpdump iproute2 curl wget bzip2 ca-certificates
+
+# Install deps + add Chrome Stable + purge all the things
+RUN apt-get update && apt-get install -y \
+    apt-transport-https \
+    gnupg \
+    --no-install-recommends \
+    && curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
+    && apt-get update && apt-get install -y \
+    google-chrome-stable \
+    --no-install-recommends \
+    && apt-get purge --auto-remove -y gnupg
 
 
-RUN mkdir /tmp/phantomjs \
-  && F="$(wget --no-verbose -O - http://phantomjs.org/download.html \
-  | grep -A 100 'SHA-256 Checksums' | grep linux-x86_64 | awk '{print $2}')" \
-  && wget --no-verbose -O - "https://bitbucket.org/ariya/phantomjs/downloads/$F" \
-  | tar xj --strip-components=1 -C /tmp/phantomjs \
-  && mv /tmp/phantomjs/bin/phantomjs /usr/local/bin \
-  && cp -r /tmp/phantomjs/examples/ /home/mitmproxy/phantomjs-examples \
-  && rm -r /tmp/phantomjs
-
-#COPY requirements.txt /tmp/requirements.txt
+# Start install of mitmproxy
 RUN echo "git+https://github.com/mitmproxy/mitmproxy.git@master" \
       > /tmp/requirements.txt
 
-
-# add our user first to make sure the ID get assigned consistently,
-# regardless of whatever dependencies get added
 # E: Unable to locate package su-exec > ignore
 # E: Unable to locate package libffi > libffi6
 # E: Unable to locate package openssl-dev > libssl-dev
@@ -65,17 +76,22 @@ RUN export DEBIAN_FRONTEND=teletype && apt-get install -y \
         python3-dev \
     && rm /tmp/requirements.txt \
     && rm -rf ~/.cache/pip
-RUN export DEBIAN_FRONTEND=teletype && apt-get install -y iproute2
+
+RUN wget https://github.com/Yelp/dumb-init/releases/download/v1.2.1/dumb-init_1.2.1_amd64.deb
+RUN dpkg -i dumb-init_*.deb
+
 RUN apt-get clean -y
 
-VOLUME /home/mitmproxy/data
-VOLUME /home/mitmproxy/bin
+VOLUME /home/$USER_NAME/data
+VOLUME /home/$USER_NAME/bin
 
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
 
 #EXPOSE 8080 8081
-WORKDIR /home/mitmproxy
+WORKDIR /home/$USER_NAME
+
 #ENTRYPOINT ["/home/mitmproxy/bin/entrypoint.sh"]
-CMD ["/home/mitmproxy/bin/entrypoint.sh", "hild1.no"]
+# ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/home/$USER_NAME/bin/entrypoint.sh"]

@@ -1,2 +1,2 @@
 #! /bin/bash
-docker build . --no-cache --pull=true -t hild1.no:mitmphantom
+docker build . "$@" --pull=true -t hild1.no:mitmchrome
