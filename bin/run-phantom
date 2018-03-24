@@ -1,0 +1,1 @@
+bin/phantomjs --ssl-protocol=tlsv1 --ignore-ssl-errors=true --proxy=127.0.0.1:8080 nop.js "$1"
