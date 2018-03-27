@@ -1,3 +1,6 @@
 bin/phantomjs-examples
 bin/CA
 data/
+foo*
+*.png
+chrome_docker_seccomp_profile.json
