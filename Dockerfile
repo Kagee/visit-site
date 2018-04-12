@@ -50,7 +50,9 @@ RUN apt-get update && apt-get install -y \
 
 
 # Start install of mitmproxy
-RUN echo "git+https://github.com/mitmproxy/mitmproxy.git@master" \
+#RUN echo "git+https://github.com/mitmproxy/mitmproxy.git@master" \
+#      > /tmp/requirements.txt
+RUN echo "git+https://github.com/mitmproxy/mitmproxy.git@3.0.x" \
       > /tmp/requirements.txt
 
 # E: Unable to locate package su-exec > ignore
