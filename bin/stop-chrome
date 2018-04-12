@@ -1,0 +1,10 @@
+#! /bin/bash
+PIDFILE="$HOME/.chrome.pid"
+if [ -f "$PIDFILE" ]; then
+	kill $(cat $PIDFILE) && rm $PIDFILE || (echo "failed to kill Chrome, check output:" && ps a)
+	sleep 1s;
+	echo "";
+else
+    echo "Chrome was not running, check output:";
+    ps a;
+fi

@@ -1,0 +1,11 @@
+#! /bin/bash
+PIDFILE="$HOME/.chrome.pid"
+if [ -f "$PIDFILE" ]; then
+  echo "Chrome PID is $(cat $PIDFILE)"
+else
+  su -c 'google-chrome --remote-debugging-port=9222 --headless 2>&1 | grep -v "ERROR:gpu" ' mitm &
+  CHROME_PID="$!"
+  sleep 1s
+  echo "Chrome PID is $CHROME_PID"
+  echo "$CHROME_PID" > $HOME/.chrome.pid
+fi
