@@ -79,8 +79,20 @@ RUN export DEBIAN_FRONTEND=teletype && apt-get install -y \
     && rm /tmp/requirements.txt \
     && rm -rf ~/.cache/pip
 
+#RUN apt install -y npm \
+#    && npm install --verbose chrome-har-capturer
+
+RUN curl -sL https://deb.nodesource.com/setup_8.x -o nodesource_setup.sh \
+    && chmod +x nodesource_setup.sh && ./nodesource_setup.sh \
+    && apt install -y nodejs
+
+RUN npm install -g chrome-har-capturer
+
 RUN wget https://github.com/Yelp/dumb-init/releases/download/v1.2.1/dumb-init_1.2.1_amd64.deb
 RUN dpkg -i dumb-init_*.deb
+
+# For debugging
+RUN apt install -y vim 
 
 RUN apt-get clean -y
 
